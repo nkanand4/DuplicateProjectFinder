@@ -1,11 +1,9 @@
 package org.apache.hadoop.examples;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -17,30 +15,35 @@ public class Recommender {
 	
 	private HashMap<String, ArrayList<HashMap<String, Integer>>> data = new HashMap<String, ArrayList<HashMap<String,Integer>>>();
 	private ArrayList<String> fileMaps = new ArrayList<String>();
-	private String outputFilePath="output/part-r-00000";
-	private String logFilePath="output/log.txt";
-	FileWriter logStream;
-	BufferedWriter out;
+	private String dataFileFromHadoop="output/part-r-00000";
 	
-	public Recommender() {
-		try {
-			logStream = new FileWriter(logFilePath);
-			out = new BufferedWriter(logStream);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+	
+	
+	public void setDataFileFromHadoop(String dataFileFromHadoop) {
+		this.dataFileFromHadoop = dataFileFromHadoop;
 	}
+	/**
+	 * This method extracts the base name of the file
+	 * @param f {@link String} file name
+	 * @return {@link String} file's base name
+	 */
 	
 	private String filebasename(String f) {
 		String[] fileFrags = f.split("/");
 		String fileName = fileFrags[fileFrags.length - 1];		
 		return fileName;
 	}
-	
+	/**
+	 * This method pre-processes the output file such that it creates a hash map 
+	 * of following format
+	 * {
+	 * 	filename1 :[{word1: count1}, {word2: count2}, {word3: count3}],
+	 * 	filename2 :[{word1: count1}, {word4: count4}, {word3: count3}]
+	 * }
+	 */
 	private void preprocess() {
 		try {
-			FileInputStream fstream = new FileInputStream(outputFilePath);
+			FileInputStream fstream = new FileInputStream(dataFileFromHadoop);
 			DataInputStream in = new DataInputStream(fstream);
 			BufferedReader br = new BufferedReader(new InputStreamReader(in));
 			String strLine;
@@ -65,7 +68,7 @@ public class Recommender {
 						data.put(line[1], list);
 					}
 				}
-				System.out.println(data);
+				//System.out.println(data);
 				
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
@@ -77,6 +80,13 @@ public class Recommender {
 		}
 	}
 	
+	/**
+	 * This method determines if the 2 files have
+	 * already been compared. 
+	 * @param f1 {@link String} file name
+	 * @param f2 {@link String} file name
+	 * @return {@link Boolean}
+	 */
 	private boolean isAlreadyCompared(String f1, String f2) {
 		boolean alreadyCompared = fileMaps.contains(f1 + f2) || fileMaps.contains(f2 + f1);
 		if(!alreadyCompared) {
@@ -85,6 +95,10 @@ public class Recommender {
 		return alreadyCompared;
 	}
 	
+	/**
+	 * This method uses the pre-processed data to
+	 * determine the nearly duplicate files.
+	 */
 	private void process() {
 		for(Entry<String, ArrayList<HashMap<String, Integer>>> entOuter : data.entrySet()) {
 			String keyOuter = entOuter.getKey();
@@ -94,7 +108,8 @@ public class Recommender {
 				int match = 0, matchPC;
 				 String keyInner = entInner.getKey();
 				 keyInner = filebasename(keyInner);
-				 // also check if not already compared
+				 // do not compare the same files
+				 // also not if they are already compared
 				 if(!keyOuter.equals(keyInner) && !isAlreadyCompared(keyOuter, keyInner)) {
 					 //log("Comparing " + keyOuter + " with " + keyInner);
 					 // do not compare same 2 files.
@@ -122,8 +137,9 @@ public class Recommender {
 						 }
 					 }
 					 matchPC = match*200/(outerList.size()+innerList.size());
-					 if(matchPC > 30)
+					 if(matchPC > 30) {						 
 						 System.out.println(keyOuter + " matches " + keyInner + " by " + matchPC);
+					 }
 				 }
 				 
 			}
@@ -135,6 +151,13 @@ public class Recommender {
 	 */
 	public static void main(String[] args) {
 		Recommender r = new Recommender();
+		if(args.length == 0) {
+			System.err.println("Please specify the path to output from hadoop.");
+			return;
+		} else {
+			System.out.println("filename is " + args[0]);
+		}
+		r.setDataFileFromHadoop(args[0]);
 		r.preprocess();
 		r.process();
 	}
