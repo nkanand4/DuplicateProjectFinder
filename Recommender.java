@@ -49,7 +49,7 @@ public class Recommender {
 			String strLine;
 			try {
 				while ((strLine = br.readLine()) != null) {
-					String[] line = strLine.split(","); // line[0]:word; line[1]:filename; line[2]:count
+					String[] line = strLine.split(","); // line[0]:filename; line[1]:word; line[2]:count
 					if(line.length > 1) {
 						HashMap<String, Integer>wordCountMap = new HashMap<String, Integer>();
 						wordCountMap.put(line[1], Integer.parseInt(line[2].replaceAll("\t", "")));
