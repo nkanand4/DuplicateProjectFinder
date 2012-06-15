@@ -52,12 +52,12 @@ public class Recommender {
 					String[] line = strLine.split(","); // line[0]:word; line[1]:filename; line[2]:count
 					if(line.length > 1) {
 						HashMap<String, Integer>wordCountMap = new HashMap<String, Integer>();
-						wordCountMap.put(line[0], Integer.parseInt(line[2].replaceAll("\t", "")));
+						wordCountMap.put(line[1], Integer.parseInt(line[2].replaceAll("\t", "")));
 						ArrayList<HashMap<String, Integer>> list;
-						if(data.containsKey(line[1])){
+						if(data.containsKey(line[0])){
 							// key exist already. get the array and append
 							// the wordCountMap into that array
-							list = data.get(line[1]);
+							list = data.get(line[0]);
 							
 						} else{
 							// add a new arraylist with the key and append
@@ -65,10 +65,10 @@ public class Recommender {
 							list = new ArrayList<HashMap<String,Integer>>();
 						}
 						list.add(wordCountMap);
-						data.put(line[1], list);
+						data.put(line[0], list);
 					}
 				}
-				//System.out.println(data);
+				System.out.println(data);
 				
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
@@ -153,11 +153,11 @@ public class Recommender {
 		Recommender r = new Recommender();
 		if(args.length == 0) {
 			System.err.println("Please specify the path to output from hadoop.");
-			return;
+			//return;
 		} else {
 			System.out.println("filename is " + args[0]);
+			r.setDataFileFromHadoop(args[0]);
 		}
-		r.setDataFileFromHadoop(args[0]);
 		r.preprocess();
 		r.process();
 	}

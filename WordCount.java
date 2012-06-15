@@ -61,7 +61,7 @@ public class WordCount {
 
 					// collect if this noun is greater than 4 letters
 					if (thisword[0].length() > 4) {
-						word.set(thisword[0].toLowerCase() + ',' + filePath+',');
+						word.set(filePath + "," + thisword[0].toLowerCase()+",");
 						context.write(word, one);
 					}
 				}
